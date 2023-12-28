@@ -10,14 +10,15 @@ app.use(express.json());
 
 const fetchBookSuggestions = async (bookName, whyLiked) => {
   try {
-    const prompt = `Book Name: ${bookName}\nWhy You Like It: ${whyLiked}`;
+    const prompt = `Generate book suggestions similar to "${bookName}" based on why it's liked: "${whyLiked}"\nSuggestions:`;
+    
     const response = await axios.post(
       'https://api.openai.com/v1/engines/davinci/completions',
       {
         prompt: prompt,
-        max_tokens: 100,
+        max_tokens: 300,
         temperature: 0.5,
-        n: 5, // Number of suggestions (adjust as needed)
+        n: 3,
         stop: '\n',
       },
       {
@@ -27,8 +28,17 @@ const fetchBookSuggestions = async (bookName, whyLiked) => {
         },
       }
     );
-    
-    const suggestions = response.data.choices.map(choice => choice.text.trim());
+
+    const choices = response.data.choices;
+
+    const suggestions = choices.map(choice => {
+      const text = choice.text.trim();
+      const splitText = text.split(', "');
+      const book = splitText[0].replace(/"/g, '');
+      const reason = splitText.slice(1).join(', "').replace(/"/g, '');
+      return { book, reason };
+    });
+
     return suggestions;
   } catch (error) {
     throw error;
@@ -38,6 +48,9 @@ const fetchBookSuggestions = async (bookName, whyLiked) => {
 app.post('/book-suggestions', async (req, res) => {
   try {
     const { bookName, whyLiked } = req.body;
+    if (!bookName || !whyLiked) {
+      return res.status(400).json({ error: 'Invalid request. Please provide bookName and whyLiked.' });
+    }
     const suggestions = await fetchBookSuggestions(bookName, whyLiked);
     res.json({ suggestions });
   } catch (error) {
