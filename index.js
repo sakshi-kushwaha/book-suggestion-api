@@ -3,7 +3,7 @@ const axios = require('axios');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 app.use(express.json());
