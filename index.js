@@ -29,7 +29,7 @@ const fetchBookSuggestions = async (bookName, whyLiked) => {
       }
     );
 
-    const suggestionsText = response.data.choices[0].text.trim(); // Assuming the text is in the first choice
+    const suggestionsText = response.data.choices[0].text.trim();
 
     const parsedSuggestions = parseBookSuggestions(suggestionsText);
     const improvedSuggestions = improveSuggestions(parsedSuggestions);
@@ -69,7 +69,7 @@ const improveSuggestions = (suggestions) => {
       const nextSuggestion = suggestions[i + 1];
       if (nextSuggestion && nextSuggestion.book.startsWith(book)) {
         reason += ` ${nextSuggestion.reason}`;
-        i++; // Move to the next suggestion
+        i++;
       }
     }
 
