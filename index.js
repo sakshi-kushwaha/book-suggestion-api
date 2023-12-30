@@ -29,20 +29,55 @@ const fetchBookSuggestions = async (bookName, whyLiked) => {
       }
     );
 
-    const choices = response.data.choices;
+    const suggestionsText = response.data.choices[0].text.trim();
 
-    const suggestions = choices.map(choice => {
-      const text = choice.text.trim();
-      const splitText = text.split(', "');
-      const book = splitText[0].replace(/"/g, '');
-      const reason = splitText.slice(1).join(', "').replace(/"/g, '');
-      return { book, reason };
-    });
+    const parsedSuggestions = parseBookSuggestions(suggestionsText);
+    const improvedSuggestions = improveSuggestions(parsedSuggestions);
 
-    return suggestions;
+    return improvedSuggestions;
   } catch (error) {
     throw error;
   }
+};
+
+const parseBookSuggestions = (text) => {
+  const suggestions = [];
+  const books = text.split('"');
+  
+  for (let i = 1; i < books.length; i += 2) {
+    const book = books[i];
+    const reasons = (books[i + 1] || '').split(',').map(reason => reason.trim()).filter(Boolean);
+    const formattedReasons = reasons.join(', ');
+    
+    suggestions.push({ book, reason: formattedReasons });
+  }
+  
+  return suggestions;
+};
+
+
+
+const improveSuggestions = (suggestions) => {
+  const improvedSuggestions = [];
+  let i = 0;
+  
+  while (i < suggestions.length) {
+    const currentSuggestion = suggestions[i];
+    let { book, reason } = currentSuggestion;
+
+    if (book.endsWith(':')) {
+      const nextSuggestion = suggestions[i + 1];
+      if (nextSuggestion && nextSuggestion.book.startsWith(book)) {
+        reason += ` ${nextSuggestion.reason}`;
+        i++;
+      }
+    }
+
+    improvedSuggestions.push({ book, reason });
+    i++;
+  }
+
+  return improvedSuggestions;
 };
 
 app.post('/book-suggestions', async (req, res) => {
